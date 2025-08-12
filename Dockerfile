@@ -9,7 +9,7 @@ ARG GITHUB_USERNAME
 ARG GITHUB_TOKEN
 
 ENV AUTOMAIL_VERSION=${AUTOMAIL_VERSION:-"1.8.190"} \
-    FREESCOUT_REPO_URL=https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/Webhoek/autommail.git \
+    AUTOMAIL_REPO_URL=https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/Webhoek/autommail.git \
     NGINX_WEBROOT=/www/html \
     NGINX_SITE_ENABLED=automail \
     PHP_CREATE_SAMPLE_PHP=FALSE \
@@ -48,7 +48,7 @@ RUN source /assets/functions/00-container && \
     php-ext reset && \
     php-ext enable core && \
     php-ext enable core && \
-    clone_git_repo ${FREESCOUT_REPO_URL} master /assets/install && \
+    clone_git_repo ${AUTOMAIL_REPO_URL} master /assets/install && \
     mkdir -p vendor/natxet/cssmin/src && \
     mkdir -p vendor/rap2hpoutre/laravel-log-viewer/src/controllers && \
     if [ -d "/build-assets/src" ] ; then cp -Rp /build-assets/src/* /assets/install ; fi; \

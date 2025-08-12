@@ -19,19 +19,25 @@ services:
     #- ./modules:/www/html/Modules
     - ./logs/:/www/logs
     environment:
-    - CONTAINER_NAME=automail-app
-    
-    - DB_HOST=automail-db
-    - DB_NAME=automail
-    - DB_USER=automail
-    - DB_PASS=automail
-
-    - SITE_URL=http://localhost
-    - ADMIN_EMAIL=admin@admin.com
-    - ADMIN_PASS=automail
-    - ENABLE_SSL_PROXY=FALSE
-    - DISPLAY_ERRORS=FALSE
-    - TIMEZONE=America/Vancouver
+      - CONTAINER_NAME=automail-app
+      - DEBUG_MODE=TRUE
+      - DB_HOST=automail-db
+      - DB_NAME=automail
+      - DB_USER=automail
+      - DB_PASS=automail
+      - SITE_URL=http://localhost
+      - ADMIN_EMAIL=admin@admin.com
+      - ADMIN_PASS=automail
+      - ENABLE_SSL_PROXY=FALSE
+      - DISPLAY_ERRORS=FALSE
+      - TIMEZONE=Europe/Amsterdam
+      - CUSTOMIZATION_LOGO=1DB3CI1hMImBsGygZWNBGv3xY.png
+      - CUSTOMIZATION_BANNER=UBgXN1eWORMzRZOXF7GOo34Pj.png
+      - CUSTOMIZATION_FAVICON=
+      - CUSTOMIZATION_PRIMARY_COLOR=
+      - CUSTOMIZATION_HEADER=1428A0
+      - CUSTOMIZATION_FOOTER=<div>Automail</div>
+      - CUSTOMIZATION_CSS=
     restart: always
 
   automail-db:

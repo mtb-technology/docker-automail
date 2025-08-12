@@ -1,15 +1,17 @@
 ARG PHP_VERSION=8.3
 ARG DISTRO="alpine"
 
-FROM docker.io/tiredofit/nginx-php-fpm:${PHP_VERSION}-${DISTRO}-7.7.19
-LABEL maintainer="Dave Conroy (github.com/tiredofit)"
+FROM tiredofit/nginx-php-fpm:${PHP_VERSION}-${DISTRO}-7.7.19
+LABEL maintainer="Beaudinn Greve (github.com/cerebello)"
 
-ARG FREESCOUT_VERSION
+ARG AUTOMAIL_VERSION
+ARG GITHUB_USERNAME
+ARG GITHUB_TOKEN
 
-ENV FREESCOUT_VERSION=${FREESCOUT_VERSION:-"1.8.190"} \
-    FREESCOUT_REPO_URL=https://github.com/freescout-helpdesk/freescout \
+ENV AUTOMAIL_VERSION=${AUTOMAIL_VERSION:-"1.8.190"} \
+    FREESCOUT_REPO_URL=https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/Webhoek/autommail.git \
     NGINX_WEBROOT=/www/html \
-    NGINX_SITE_ENABLED=freescout \
+    NGINX_SITE_ENABLED=automail \
     PHP_CREATE_SAMPLE_PHP=FALSE \
     PHP_ENABLE_CURL=TRUE \
     PHP_ENABLE_FILEINFO=TRUE \
@@ -26,8 +28,8 @@ ENV FREESCOUT_VERSION=${FREESCOUT_VERSION:-"1.8.190"} \
     PHP_ENABLE_SIMPLEXML=TRUE \
     PHP_ENABLE_TOKENIZER=TRUE \
     PHP_ENABLE_ZIP=TRUE \
-    IMAGE_NAME="tiredofit/freescout" \
-    IMAGE_REPO_URL="https://github.com/tiredofit/docker-freescout/"
+    IMAGE_NAME="cerebello/automail" \
+    IMAGE_REPO_URL="https://github.com/cerebello/docker-automail/"
 
 ADD build-assets /build-assets
 
@@ -35,7 +37,7 @@ RUN source /assets/functions/00-container && \
     set -x && \
     package update && \
     package upgrade && \
-    package install .freescout-run-deps \
+    package install .automail-run-deps \
                 expect \
                 git \
                 gnu-libiconv \
@@ -46,7 +48,7 @@ RUN source /assets/functions/00-container && \
     php-ext reset && \
     php-ext enable core && \
     php-ext enable core && \
-    clone_git_repo ${FREESCOUT_REPO_URL} ${FREESCOUT_VERSION} /assets/install && \
+    clone_git_repo ${FREESCOUT_REPO_URL} master /assets/install && \
     mkdir -p vendor/natxet/cssmin/src && \
     mkdir -p vendor/rap2hpoutre/laravel-log-viewer/src/controllers && \
     if [ -d "/build-assets/src" ] ; then cp -Rp /build-assets/src/* /assets/install ; fi; \

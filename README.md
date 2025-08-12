@@ -1,22 +1,12 @@
-# github.com/tiredofit/docker-freescout
 
-[![GitHub release](https://img.shields.io/github/v/tag/tiredofit/docker-freescout?style=flat-square)](https://github.com/tiredofit/docker-freescout/releases/latest)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/tiredofit/docker-freescout/main.yml?branch=main&style=flat-square)](https://github.com/tiredofit/docker-freescout/actions)
-[![Docker Stars](https://img.shields.io/docker/stars/tiredofit/freescout.svg?style=flat-square&logo=docker)](https://hub.docker.com/r/tiredofit/freescout/)
-[![Docker Pulls](https://img.shields.io/docker/pulls/tiredofit/freescout.svg?style=flat-square&logo=docker)](https://hub.docker.com/r/tiredofit/freescout/)
-[![Become a sponsor](https://img.shields.io/badge/sponsor-tiredofit-181717.svg?logo=github&style=flat-square)](https://github.com/sponsors/tiredofit)
-[![Paypal Donate](https://img.shields.io/badge/donate-paypal-00457c.svg?logo=paypal&style=flat-square)](https://www.paypal.me/tiredofit)
 
 * * *
 ## About
 
-This will build a Docker Image for [FreeScout](https://freescout.net/) - An open source Helpscout / Zendesk alternative.
+This will build a Docker Image for [FreeScout](https://automail.net/) - An open source Helpscout / Zendesk alternative.
 
 * Automatically installs and sets up installation upon first start
 
-## Maintainer
-
-- [Dave Conroy](https://github.com/tiredofit)
 
 ## Table of Contents
 
@@ -57,16 +47,16 @@ This will build a Docker Image for [FreeScout](https://freescout.net/) - An open
 Clone this repository and build the image with `docker build -t (imagename) .`
 
 ### Prebuilt Images
-Builds of the image are available on [Docker Hub](https://hub.docker.com/r/tiredofit/freescout)
+Builds of the image are available on [Docker Hub](https://hub.docker.com/r/tiredofit/automail)
 
 ```bash
-docker pull docker.io/tiredofit/freescout:(imagetag)
+docker pull docker.io/tiredofit/automail:(imagetag)
 ```
 
-Builds of the image are also available on the [Github Container Registry](https://github.com/tiredofit/docker-freescout/pkgs/container/docker-freescout)
+Builds of the image are also available on the [Github Container Registry](https://github.com/tiredofit/docker-automail/pkgs/container/docker-automail)
 
 ```
-docker pull ghcr.io/tiredofit/docker-freescout:(imagetag)
+docker pull ghcr.io/tiredofit/docker-automail:(imagetag)
 ```
 
 The following image tags are available along with their tagged release based on what's written in the [Changelog](CHANGELOG.md):
@@ -98,7 +88,7 @@ The following directories are used for configuration and can be mapped for persi
 | `/assets/custom`         | (Optional) Copy source code over existing source code in /www/html upon container start. Use exact file/folder structure |
 | `/assets/custom-scripts` | (Optional) If you want to execute custom scripting, place scripts here with extension `.sh`                              |
 | `/assets/modules`        | (Optional) If you want to add additional modules outside of the source tree, add them here                               |
-| `/www/html`              | (Optional) If you want to expose the Freescout sourcecode and enable Self Updating, expose this volume                   |
+| `/www/html`              | (Optional) If you want to expose the Automail sourcecode and enable Self Updating, expose this volume                   |
 | *OR*                     |                                                                                                                          |
 | `/data`                  | Hold onto your persistent sessions and cache between container restarts                                                  |
 
@@ -123,23 +113,23 @@ Be sure to view the following repositories to understand all the customizable op
 | `ADMIN_FIRST_NAME`                     | Admin user First Name                                                                           | `Admin`     | x       |
 | `ADMIN_LAST_NAME`                      | Admin user First Name                                                                           | `User`      | x       |
 | `ADMIN_PASS`                           | Administrator Password - Needed for Logging in                                                  |             | x       |
-| `APPLICATION_NAME`                     | Change default application name - Default `Freescout`                                           | `freescout` |         |
+| `APPLICATION_NAME`                     | Change default application name - Default `Automail`                                           | `automail` |         |
 | `APP_PROXY`                            | Allow Application to use a proxy for fetching modules                                           |             |         |
 | `APP_TRUSTED_PROXIES`                  | Comma separated list of trusted proxies, i.e. `192.168.1.1,192.168.1.2,192.168.1.3`             |             |         |
 | `APP_SINCE_WITHOUT_QUOTES_ON_FETCHING` | Allow to disable quotes around SINCE date in IMAP search                                        | `FALSE`     |         |
 | `APP_X_FRAME_OPTIONS`                  | Allow to embed via iframes `TRUE` `FALSE` `DENY` `ALLOW FROM example.org`                       | `TRUE`      |         |
 | `DB_TYPE`                              | Type of the Database. Currently supported are `mysql` and `pgsql`                               | `mysql`     |         |
 | `DB_PGSQL_SSL_MODE`                    | Postgresql TLS Mode                                                                             | `prefer`    |         |
-| `DB_HOST`                              | Host or container name of the Databse Server e.g. `freescout-db`                                |             | x       |
+| `DB_HOST`                              | Host or container name of the Databse Server e.g. `automail-db`                                |             | x       |
 | `DB_PORT`                              | Database Port e.g.`3306` for mysql, `5432` for postgres                                         | `3306`      | x       |
-| `DB_NAME`                              | Database name e.g. `freescout`                                                                  |             | x       |
-| `DB_USER`                              | Username for above Database e.g. `freescout`                                                    |             | x       |
+| `DB_NAME`                              | Database name e.g. `automail`                                                                  |             | x       |
+| `DB_USER`                              | Username for above Database e.g. `automail`                                                    |             | x       |
 | `DB_PASS`                              | Password for above Database e.g. `password`                                                     |             | x       |
 | `DB_SSL` | Used to enable SSL support for MySQL and MariaDB databases | `FALSE` | |
 | `DISPLAY_ERRORS`                       | Display Errors on Website                                                                       | `FALSE`     |         |
-| `ENABLE_AUTO_UPDATE`                   | If coming from an earlier version of image, automatically update it to latest Freescout release | `TRUE`      |         |
+| `ENABLE_AUTO_UPDATE`                   | If coming from an earlier version of image, automatically update it to latest Automail release | `TRUE`      |         |
 | `SETUP_TYPE`                           | Automatically edit configuration after first bootup `AUTO` or `MANUAL`                          | `AUTO`      |         |
-| `SITE_URL`                             | The url your site listens on example `https://freescout.example.com`                            |             |         |
+| `SITE_URL`                             | The url your site listens on example `https://automail.example.com`                            |             |         |
 | `SKIP_STORAGE_PERMISSIONS`             | Skip applying permission to storage path, e.g. for instances involving large storage paths      | `FALSE`            |         |
 
 
@@ -183,5 +173,5 @@ MIT. See [LICENSE](LICENSE) for more details.
 
 ## References
 
-* <https://freescout.net/>
-* <https://github.com/freescout-helpdesk/freescout/wiki/Installation-Guide>
+* <https://automail.net/>
+* <https://github.com/automail-helpdesk/automail/wiki/Installation-Guide>

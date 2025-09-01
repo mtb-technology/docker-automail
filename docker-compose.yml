@@ -26,7 +26,7 @@ services:
       - DB_NAME=automail
       - DB_USER=automail
       - DB_PASS=automail
-      - SITE_URL: "https://automail.jandebelastingman.nl"
+      - SITE_URL="https://automail.jandebelastingman.nl"
       - ADMIN_EMAIL=bgreve@jandebelastingman.nl
       - ADMIN_PASS=compaq123
       # Trust Nginx in front (important for HTTPS & client IP)

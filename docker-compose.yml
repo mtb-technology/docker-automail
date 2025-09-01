@@ -7,17 +7,14 @@ services:
         - GITHUB_TOKEN=${GITHUB_TOKEN}
     container_name: automail-app
     ports:
-    - "127.0.0.1:8080:80"
-    links:
-    - automail-db
+      - "127.0.0.1:8080:80"
+    # links:                      # ← optional: safe to remove
+    #   - automail-db
+    depends_on:                   # ← preferred over links
+      - automail-db
     volumes:
-    ### If you want to perform customizations to the source and have access to it, then uncomment this line - This includes modules
-    - ./data:/www/html
-    ### Or, if you just want to use Stock Automail and hold onto persistent files like cache and session use this, one or the other.
-    # - ./data:/data
-    ### If you want to just keep the original source and add additional modules uncomment this line
-    #- ./modules:/www/html/Modules
-    - ./logs/:/www/logs
+      - ./data:/www/html         # you’re mounting app source here (fine)
+      - ./logs/:/www/logs
     environment:
       - CONTAINER_NAME=automail-app
       - APPLICATION_NAME=Automail
@@ -26,12 +23,11 @@ services:
       - DB_NAME=automail
       - DB_USER=automail
       - DB_PASS=automail
-      - SITE_URL="https://automail.jandebelastingman.nl"
+      - SITE_URL=https://automail.jandebelastingman.nl   # ← removed quotes
       - ADMIN_EMAIL=bgreve@jandebelastingman.nl
-      - ADMIN_PASS=compaq123
-      # Trust Nginx in front (important for HTTPS & client IP)
-      - APP_TRUSTED_PROXIES="127.0.0.1"
-      - ENABLE_SSL_PROXY=FALSE
+      - ADMIN_PASS=compaq123                             # ← rotate after bootstrap
+      - APP_TRUSTED_PROXIES=127.0.0.1                   # ← removed quotes
+      - ENABLE_SSL_PROXY=TRUE                            # ← was FALSE
       - DISPLAY_ERRORS=true
       - TIMEZONE=Europe/Amsterdam
       - ENABLE_AUTO_UPDATE=false
@@ -48,15 +44,16 @@ services:
       - DB_NAME=automail
       - DB_USER=automail
       - DB_PASS=automail
-
       - CONTAINER_NAME=automail-db
     restart: always
 
   automail-db-backup:
     container_name: automail-db-backup
     image: tiredofit/db-backup
-    links:
-     - automail-db
+    # links:                     # ← optional: safe to remove
+    #   - automail-db
+    depends_on:                  # ← preferred over links
+      - automail-db
     volumes:
       - ./dbbackup:/backup
     environment:

@@ -5,6 +5,7 @@ services:
       args:
         - GITHUB_USERNAME=${GITHUB_USERNAME}
         - GITHUB_TOKEN=${GITHUB_TOKEN}
+        - SITE_URL=${SITE_URL}    
     container_name: automail-app
     ports:
       - "127.0.0.1:8080:80"
@@ -23,7 +24,6 @@ services:
       - DB_NAME=automail
       - DB_USER=automail
       - DB_PASS=automail
-      - SITE_URL=https://automail.jandebelastingman.nl   # ← removed quotes
       - ADMIN_EMAIL=bgreve@jandebelastingman.nl
       - ADMIN_PASS=compaq123                             # ← rotate after bootstrap
       - APP_TRUSTED_PROXIES=127.0.0.1                   # ← removed quotes

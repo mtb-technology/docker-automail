@@ -26,9 +26,9 @@ services:
       - DB_NAME=automail
       - DB_USER=automail
       - DB_PASS=automail
-      - SITE_URL=http://automail.local
-      - ADMIN_EMAIL=admin@admin.com
-      - ADMIN_PASS=automail
+      - SITE_URL=automail.jandebelastingman.nl
+      - ADMIN_EMAIL=bgreve@jandebelastingman.nl
+      - ADMIN_PASS=compaq123
 
       - ENABLE_SSL_PROXY=FALSE
       - DISPLAY_ERRORS=true

@@ -14,12 +14,9 @@ if [ ! -f "${NGINX_WEBROOT}/server.php" ]; then
     ### If running with /www/html or NGINX_WEBROOT mapped, then create persistent storage
     ### Storage redirection
     if [ -d "/data" ]; then
-        print_warn "Detected /data directory. Persistently saving settings/sessions/cache/uploads/modules"
+        print_warn "Detected /data directory. Persistently saving settings/sessions/cache/uploads"
         if [ ! -d "/data/storage" ]; then
             cp -R "${NGINX_WEBROOT}"/storage /data
-        fi
-        if [ ! -d "/data/Modules" ]; then
-            cp -R "${NGINX_WEBROOT}"/Modules /data
         fi
         rm -rf "${NGINX_WEBROOT}"/storage
         ln -s /data/storage "${NGINX_WEBROOT}"/storage
@@ -29,8 +26,6 @@ if [ ! -f "${NGINX_WEBROOT}/server.php" ]; then
             mv /data/storage/app/public/attachment/* /data/storage/app/attachment
             rm -rf /data/storage/app/public/attachment
         fi
-        rm -rf "${NGINX_WEBROOT}"/Modules
-        ln -s /data/Modules "${NGINX_WEBROOT}"/Modules
         ln -sf /data/config "${NGINX_WEBROOT}"/.env
         touch /data/config
         chown "${NGINX_USER}":"${NGINX_GROUP}" "${NGINX_WEBROOT}"/.env

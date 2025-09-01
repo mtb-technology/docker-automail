@@ -3,7 +3,7 @@
 * * *
 ## About
 
-This will build a Docker Image for [FreeScout](https://automail.net/) - An open source Helpscout / Zendesk alternative.
+This will build a Docker Image for [Automail](https://automail.net/) 
 
 * Automatically installs and sets up installation upon first start
 

@@ -28,7 +28,7 @@ services:
       - ADMIN_PASS=compaq123                             # ← rotate after bootstrap
       - APP_TRUSTED_PROXIES=127.0.0.1                   # ← removed quotes
       - ENABLE_SSL_PROXY=TRUE                            # ← was FALSE
-      - DISPLAY_ERRORS=true
+      - DISPLAY_ERRORS=false
       - TIMEZONE=Europe/Amsterdam
       - ENABLE_AUTO_UPDATE=false
       - SETUP_TYPE=MANUAL

@@ -14,7 +14,12 @@ services:
     depends_on:                   # ← preferred over links
       - automail-db
     volumes:
-      - ./data:/www/html         # you’re mounting app source here (fine)
+      ### If you want to perform customizations to the source and have access to it, then uncomment this line - This includes modules
+      #- ./data:/www/html
+      ### Or, if you just want to use Stock Freescout and hold onto persistent files like cache and session use this, one or the other.
+      - ./data:/data
+      ### If you want to just keep the original source and add additional modules uncomment this line
+      #- ./modules:/www/html/Modules
       - ./logs/:/www/logs
     environment:
       - CONTAINER_NAME=automail-app

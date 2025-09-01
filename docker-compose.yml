@@ -7,7 +7,7 @@ services:
         - GITHUB_TOKEN=${GITHUB_TOKEN}
     container_name: automail-app
     ports:
-    - 80:80
+    - 8080:80
     links:
     - automail-db
     volumes:

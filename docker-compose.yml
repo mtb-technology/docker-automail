@@ -22,21 +22,21 @@ services:
       #- ./modules:/www/html/Modules
       - ./logs/:/www/logs
     environment:
-      - CONTAINER_NAME=automail-app
-      - APPLICATION_NAME=Automail
-      - DEBUG_MODE=TRUE
-      - DB_HOST=automail-db
-      - DB_NAME=automail
-      - DB_USER=automail
-      - DB_PASS=automail
-      - ADMIN_EMAIL=bgreve@jandebelastingman.nl
-      - ADMIN_PASS=compaq123                             # ← rotate after bootstrap
-      - APP_TRUSTED_PROXIES=127.0.0.1                   # ← removed quotes
-      - ENABLE_SSL_PROXY=TRUE                            # ← was FALSE
-      - DISPLAY_ERRORS=false
-      - TIMEZONE=Europe/Amsterdam
-      - ENABLE_AUTO_UPDATE=false
-      - SETUP_TYPE=MANUAL
+      - CONTAINER_NAME=${CONTAINER_NAME:-automail-app}
+      - APPLICATION_NAME=${APPLICATION_NAME:-Automail}
+      - DEBUG_MODE=${DEBUG_MODE:-TRUE}
+      - DB_HOST=${DB_HOST:-automail-db}
+      - DB_NAME=${DB_NAME:-automail}
+      - DB_USER=${DB_USER:-automail}
+      - DB_PASS=${DB_PASS:-automail}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASS=${ADMIN_PASS}                             # ← rotate after bootstrap
+      - APP_TRUSTED_PROXIES=${APP_TRUSTED_PROXIES:-127.0.0.1}                   # ← removed quotes
+      - ENABLE_SSL_PROXY=${ENABLE_SSL_PROXY:-TRUE}                            # ← was FALSE
+      - DISPLAY_ERRORS=${DISPLAY_ERRORS:-false}
+      - TIMEZONE=${TIMEZONE:-Europe/Amsterdam}
+      - ENABLE_AUTO_UPDATE=${ENABLE_AUTO_UPDATE:-false}
+      - SETUP_TYPE=${SETUP_TYPE:-MANUAL}
     restart: always
 
   automail-db:
@@ -45,11 +45,11 @@ services:
     volumes:
       - ./db:/var/lib/mysql
     environment:
-      - ROOT_PASS=password
-      - DB_NAME=automail
-      - DB_USER=automail
-      - DB_PASS=automail
-      - CONTAINER_NAME=automail-db
+      - ROOT_PASS=${DB_ROOT_PASS:-password}
+      - DB_NAME=${DB_NAME:-automail}
+      - DB_USER=${DB_USER:-automail}
+      - DB_PASS=${DB_PASS:-automail}
+      - CONTAINER_NAME=${DB_CONTAINER_NAME:-automail-db}
     restart: always
 
   automail-db-backup:
@@ -62,15 +62,15 @@ services:
     volumes:
       - ./dbbackup:/backup
     environment:
-      - CONTAINER_NAME=automail-db-backup
-      - DB_HOST=automail-db
-      - DB_TYPE=mariadb
-      - DB_NAME=automail
-      - DB_USER=automail
-      - DB_PASS=automail
-      - DB01_BACKUP_INTERVAL=1440
-      - DB01_BACKUP_BEGIN=0000
-      - DB_CLEANUP_TIME=8640
-      - COMPRESSION=BZ
-      - MD5=TRUE
+      - CONTAINER_NAME=${BACKUP_CONTAINER_NAME:-automail-db-backup}
+      - DB_HOST=${DB_HOST:-automail-db}
+      - DB_TYPE=${DB_TYPE:-mariadb}
+      - DB_NAME=${DB_NAME:-automail}
+      - DB_USER=${DB_USER:-automail}
+      - DB_PASS=${DB_PASS:-automail}
+      - DB01_BACKUP_INTERVAL=${BACKUP_INTERVAL:-1440}
+      - DB01_BACKUP_BEGIN=${BACKUP_BEGIN:-0000}
+      - DB_CLEANUP_TIME=${DB_CLEANUP_TIME:-8640}
+      - COMPRESSION=${COMPRESSION:-BZ}
+      - MD5=${MD5:-TRUE}
     restart: always

@@ -7,6 +7,8 @@ LABEL maintainer="Beaudinn Greve (github.com/cerebello)"
 ARG AUTOMAIL_VERSION
 ARG GITHUB_USERNAME
 ARG GITHUB_TOKEN
+ARG SITE_URL
+ENV SITE_URL=${SITE_URL}
 
 ENV AUTOMAIL_VERSION=${AUTOMAIL_VERSION:-"1.8.190"} \
     AUTOMAIL_REPO_URL=https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/Webhoek/autommail.git \

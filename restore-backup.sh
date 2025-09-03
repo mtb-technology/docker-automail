@@ -34,7 +34,7 @@ echo
 
 # Step 2: Stop current containers
 echo "Step 2: Stopping Docker containers..."
-docker-compose down
+docker compose down
 echo "✓ Containers stopped"
 echo
 
@@ -60,7 +60,7 @@ echo
 
 # Step 5: Start only database container
 echo "Step 5: Starting database container..."
-docker-compose up -d automail-db
+docker compose up -d automail-db
 echo "Waiting for database to be ready..."
 sleep 10
 
@@ -91,7 +91,7 @@ echo
 
 # Step 7: Start application container
 echo "Step 7: Starting application container..."
-docker-compose up -d automail-app
+docker compose up -d automail-app
 echo "Waiting for application container to initialize..."
 sleep 10
 echo "✓ Application container started"
@@ -148,7 +148,7 @@ echo
 
 # Step 10: Start remaining services
 echo "Step 10: Starting all services..."
-docker-compose up -d
+docker compose up -d
 echo "✓ All services started"
 echo
 
@@ -157,7 +157,7 @@ echo "Step 11: Verifying restoration..."
 echo
 
 # Check container status
-docker-compose ps
+docker compose ps
 
 echo
 echo "=== Restoration Complete ==="
@@ -165,11 +165,11 @@ echo
 echo "Your Automail instance has been restored from backup!"
 echo "Please verify:"
 echo "  1. Access the application at: http://localhost:8080"
-echo "  2. Check logs for any errors: docker-compose logs -f automail-app"
+echo "  2. Check logs for any errors: docker compose logs -f automail-app"
 echo "  3. Test login with your existing credentials"
 echo
 echo "If you encounter issues:"
-echo "  - Check logs: docker-compose logs automail-app"
+echo "  - Check logs: docker compose logs automail-app"
 echo "  - Verify database connection: docker exec automail-app cat /www/html/.env | grep DB_"
 echo "  - Your original data is backed up with timestamp: $TIMESTAMP"
 echo

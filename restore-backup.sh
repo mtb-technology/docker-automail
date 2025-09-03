@@ -65,7 +65,7 @@ echo "Waiting for database to be ready..."
 sleep 10
 
 # Wait for database to be fully ready
-until docker exec automail-db mysql -u root -proot -e "SELECT 1" &>/dev/null; do
+until docker exec automail-db mysql -u root -ppassword -e "SELECT 1" &>/dev/null; do
     echo "Waiting for database..."
     sleep 2
 done
@@ -80,8 +80,8 @@ echo "This may take a few minutes for large databases..."
 docker cp "$BACKUP_SQL" automail-db:/tmp/backup.sql
 
 # Import the dump
-docker exec automail-db sh -c "mysql -u root -proot -e 'DROP DATABASE IF EXISTS automail; CREATE DATABASE automail CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'"
-docker exec automail-db sh -c "mysql -u root -proot automail < /tmp/backup.sql"
+docker exec automail-db sh -c "mysql -u root -ppassword -e 'DROP DATABASE IF EXISTS automail; CREATE DATABASE automail CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'"
+docker exec automail-db sh -c "mysql -u root -ppassword automail < /tmp/backup.sql"
 
 # Clean up
 docker exec automail-db rm /tmp/backup.sql
@@ -164,7 +164,7 @@ echo "=== Restoration Complete ==="
 echo
 echo "Your Automail instance has been restored from backup!"
 echo "Please verify:"
-echo "  1. Access the application at: http://localhost:8080"
+echo "  1. Access the application at: http://106.108.30.64"
 echo "  2. Check logs for any errors: docker compose logs -f automail-app"
 echo "  3. Test login with your existing credentials"
 echo

@@ -175,3 +175,4 @@ MIT. See [LICENSE](LICENSE) for more details.
 
 * <https://automail.net/>
 * <https://github.com/automail-helpdesk/automail/wiki/Installation-Guide>
+

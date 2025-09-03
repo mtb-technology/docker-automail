@@ -76,15 +76,48 @@ echo
 echo "Step 6: Importing database dump..."
 echo "This may take a few minutes for large databases..."
 
-# Copy dump file to container
-docker cp "$BACKUP_SQL" automail-db:/tmp/backup.sql
+# Get file size for progress reporting
+FILE_SIZE=$(du -h "$BACKUP_SQL" | cut -f1)
+echo "Database dump size: $FILE_SIZE"
 
-# Import the dump
+# First, configure MySQL for large imports
+echo "Configuring MySQL for large import..."
+docker exec automail-db mysql -u root -ppassword -e "SET GLOBAL max_allowed_packet=1073741824;"
+docker exec automail-db mysql -u root -ppassword -e "SET GLOBAL wait_timeout=28800;"
+docker exec automail-db mysql -u root -ppassword -e "SET GLOBAL interactive_timeout=28800;"
+docker exec automail-db mysql -u root -ppassword -e "SET GLOBAL net_read_timeout=600;"
+docker exec automail-db mysql -u root -ppassword -e "SET GLOBAL net_write_timeout=600;"
+
+# Create database
+echo "Creating database..."
 docker exec automail-db sh -c "mysql -u root -ppassword -e 'DROP DATABASE IF EXISTS automail; CREATE DATABASE automail CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'"
-docker exec automail-db sh -c "mysql -u root -ppassword automail < /tmp/backup.sql"
 
-# Clean up
-docker exec automail-db rm /tmp/backup.sql
+# Import using a more robust method
+echo "Starting import (this will take time for large databases)..."
+echo "Import method: Direct piped import to avoid copying large file to container"
+
+# Use pv for progress if available, otherwise use cat
+if command -v pv &> /dev/null; then
+    echo "Using pv for progress monitoring..."
+    pv "$BACKUP_SQL" | docker exec -i automail-db mysql -u root -ppassword \
+        --max_allowed_packet=1G \
+        --connect-timeout=600 \
+        --wait-timeout=28800 \
+        --interactive-timeout=28800 \
+        --net-read-timeout=600 \
+        --net-write-timeout=600 \
+        automail
+else
+    echo "Importing without progress bar (install pv for progress monitoring)..."
+    cat "$BACKUP_SQL" | docker exec -i automail-db mysql -u root -ppassword \
+        --max_allowed_packet=1G \
+        --connect-timeout=600 \
+        --wait-timeout=28800 \
+        --interactive-timeout=28800 \
+        --net-read-timeout=600 \
+        --net-write-timeout=600 \
+        automail
+fi
 
 echo "✓ Database imported successfully"
 echo

@@ -101,21 +101,11 @@ if command -v pv &> /dev/null; then
     echo "Using pv for progress monitoring..."
     pv "$BACKUP_SQL" | docker exec -i automail-db mysql -u root -ppassword \
         --max_allowed_packet=1G \
-        --connect_timeout=600 \
-        --wait_timeout=28800 \
-        --interactive_timeout=28800 \
-        --net_read_timeout=600 \
-        --net_write_timeout=600 \
         automail
 else
     echo "Importing without progress bar (install pv for progress monitoring)..."
     cat "$BACKUP_SQL" | docker exec -i automail-db mysql -u root -ppassword \
         --max_allowed_packet=1G \
-        --connect_timeout=600 \
-        --wait_timeout=28800 \
-        --interactive_timeout=28800 \
-        --net_read_timeout=600 \
-        --net_write_timeout=600 \
         automail
 fi
 

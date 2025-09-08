@@ -120,26 +120,6 @@ sleep 10
 echo "✓ Application container started"
 echo
 
-# Step 8: Copy application files
-echo "Step 8: Copying application files to container..."
-
-# Copy the application files to the container's web root
-docker cp "$BACKUP_HTML_DIR/." automail-app:/www/html/
-
-# Set proper permissions
-docker exec automail-app chown -R nginx:www-data /www/html
-docker exec automail-app chmod -R 755 /www/html
-docker exec automail-app find /www/html -type f -exec chmod 644 {} \;
-
-# Ensure storage directories are writable
-docker exec automail-app chmod -R 775 /www/html/storage || true
-docker exec automail-app chmod -R 775 /www/html/bootstrap/cache || true
-
-echo "✓ Application files copied and permissions set"
-echo
-
-# Step 9: Update configuration
-echo "Step 9: Updating configuration..."
 
 # Check if .env file exists in the backup
 if [ -f "$BACKUP_HTML_DIR/.env" ]; then

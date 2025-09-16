@@ -56,6 +56,7 @@ RUN source /assets/functions/00-container && \
     rm -rf /assets/install && \
     git clone --depth=1 --branch=master ${AUTOMAIL_REPO_URL} /assets/install && \
     rm -rf /assets/install/.git && \
+    cd /assets/install && \
     mkdir -p vendor/natxet/cssmin/src && \
     mkdir -p vendor/rap2hpoutre/laravel-log-viewer/src/controllers && \
     if [ -d "/build-assets/src" ] ; then cp -Rp /build-assets/src/* /assets/install ; fi; \

@@ -8,9 +8,10 @@ ARG AUTOMAIL_VERSION
 ARG GITHUB_USERNAME
 ARG GITHUB_TOKEN
 ARG SITE_URL
-ENV SITE_URL=${SITE_URL}
+ARG CACHEBUST=1
 
-ENV AUTOMAIL_VERSION=${AUTOMAIL_VERSION:-"1.8.190"} \
+ENV SITE_URL=${SITE_URL} \
+    AUTOMAIL_VERSION=${AUTOMAIL_VERSION:-"1.8.190"} \
     AUTOMAIL_REPO_URL=https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/Webhoek/autommail.git \
     NGINX_WEBROOT=/www/html \
     NGINX_SITE_ENABLED=automail \
@@ -35,6 +36,7 @@ ENV AUTOMAIL_VERSION=${AUTOMAIL_VERSION:-"1.8.190"} \
 
 ADD build-assets /build-assets
 
+ARG CACHEBUST
 RUN source /assets/functions/00-container && \
     set -x && \
     package update && \
@@ -50,11 +52,12 @@ RUN source /assets/functions/00-container && \
     php-ext reset && \
     php-ext enable core && \
     php-ext enable core && \
+    echo "Cache bust: ${CACHEBUST}" && \
     clone_git_repo ${AUTOMAIL_REPO_URL} master /assets/install && \
     mkdir -p vendor/natxet/cssmin/src && \
     mkdir -p vendor/rap2hpoutre/laravel-log-viewer/src/controllers && \
     if [ -d "/build-assets/src" ] ; then cp -Rp /build-assets/src/* /assets/install ; fi; \
-    if [ -d "/build-assets/scripts" ] ; then for script in /build-assets/scripts/*.sh; do echo "** Applying $script"; bash $script; done && \ ; fi ; \
+    if [ -d "/build-assets/scripts" ] ; then for script in /build-assets/scripts/*.sh; do echo "** Applying $script"; bash $script; done ; fi ; \
     if [ -d "/build-assets/custom-scripts" ] ; then mkdir -p /assets/custom-scripts ; cp -Rp /build-assets/custom-scripts/* /assets/custom-scripts ; fi; \
     composer install --ignore-platform-reqs && \
     php artisan freescout:build && \

@@ -53,7 +53,9 @@ RUN source /assets/functions/00-container && \
     php-ext enable core && \
     php-ext enable core && \
     echo "Cache bust: ${CACHEBUST}" && \
-    clone_git_repo ${AUTOMAIL_REPO_URL} master /assets/install && \
+    rm -rf /assets/install && \
+    git clone --depth=1 --branch=master ${AUTOMAIL_REPO_URL} /assets/install && \
+    rm -rf /assets/install/.git && \
     mkdir -p vendor/natxet/cssmin/src && \
     mkdir -p vendor/rap2hpoutre/laravel-log-viewer/src/controllers && \
     if [ -d "/build-assets/src" ] ; then cp -Rp /build-assets/src/* /assets/install ; fi; \

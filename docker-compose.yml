@@ -37,6 +37,11 @@ services:
       - TIMEZONE=${TIMEZONE:-Europe/Amsterdam}
       - ENABLE_AUTO_UPDATE=${ENABLE_AUTO_UPDATE:-false}
       - SETUP_TYPE=${SETUP_TYPE:-MANUAL}
+      - PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-2048M}            # Increase PHP memory limit to 2GB
+      - PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-600}  # Increase max execution time to 10 min
+      - PHP_MAX_INPUT_TIME=${PHP_MAX_INPUT_TIME:-600}          # Increase max input time to 10 min
+      - PHP_POST_MAX_SIZE=${PHP_POST_MAX_SIZE:-500M}           # Increase post max size to 500MB
+      - PHP_UPLOAD_MAX_SIZE=${PHP_UPLOAD_MAX_SIZE:-500M}       # Increase upload max size to 500MB
     restart: always
 
   automail-db:

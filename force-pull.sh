@@ -44,6 +44,12 @@ docker exec automail-app bash -c "cd /www/html && git reset --hard origin/master
 echo "Cleaning untracked files..."
 docker exec automail-app bash -c "cd /www/html && git clean -fd"
 
+echo "Restoring data volume symlinks..."
+# Restore storage symlink to /data/storage
+docker exec automail-app bash -c "[ -d /data/storage ] && [ ! -L /www/html/storage ] && rm -rf /www/html/storage && ln -s /data/storage /www/html/storage"
+# Restore .env symlink to /data/config  
+docker exec automail-app bash -c "[ -f /data/config ] && [ ! -L /www/html/.env ] && rm -f /www/html/.env && ln -sf /data/config /www/html/.env"
+
 echo "Restoring .env file..."
 docker exec automail-app bash -c "cp /tmp/env.backup /www/html/.env" 2>/dev/null
 

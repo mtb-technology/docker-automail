@@ -47,6 +47,12 @@ if [ $? -ne 0 ]; then
     
     echo "Resetting to origin/master..."
     docker exec automail-app bash -c "cd /www/html && git reset --hard origin/master"
+    
+    echo "Restoring data volume symlinks..."
+    # Restore storage symlink to /data/storage
+    docker exec automail-app bash -c "[ -d /data/storage ] && [ ! -L /www/html/storage ] && rm -rf /www/html/storage && ln -s /data/storage /www/html/storage"
+    # Restore .env symlink to /data/config  
+    docker exec automail-app bash -c "[ -f /data/config ] && [ ! -L /www/html/.env ] && rm -f /www/html/.env && ln -sf /data/config /www/html/.env"
 else
     echo "Checking for uncommitted changes..."
     docker exec automail-app bash -c "cd /www/html && git status --short"
@@ -61,6 +67,12 @@ else
         echo "Pull failed due to conflicts. Forcing update..."
         docker exec automail-app bash -c "cd /www/html && git fetch origin master"
         docker exec automail-app bash -c "cd /www/html && git reset --hard origin/master"
+        
+        echo "Restoring data volume symlinks after force reset..."
+        # Restore storage symlink to /data/storage
+        docker exec automail-app bash -c "[ -d /data/storage ] && [ ! -L /www/html/storage ] && rm -rf /www/html/storage && ln -s /data/storage /www/html/storage"
+        # Restore .env symlink to /data/config  
+        docker exec automail-app bash -c "[ -f /data/config ] && [ ! -L /www/html/.env ] && rm -f /www/html/.env && ln -sf /data/config /www/html/.env"
     fi
     
     # Try to reapply stashed changes

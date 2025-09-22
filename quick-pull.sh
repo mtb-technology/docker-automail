@@ -67,16 +67,57 @@ else
     docker exec automail-app bash -c "cd /www/html && git stash pop" 2>/dev/null || echo "Note: No stashed changes to reapply or conflicts occurred"
 fi
 
+echo "Setting initial permissions..."
+docker exec automail-app bash -c "chown -R nginx:www-data /www/html"
+
 echo "Running composer update..."
 docker exec automail-app bash -c "cd /www/html && composer install --no-dev --ignore-platform-reqs"
+
+echo "Creating required directories..."
+docker exec automail-app bash -c "mkdir -p /www/html/vendor/natxet/cssmin/src"
+docker exec automail-app bash -c "mkdir -p /www/html/vendor/rap2hpoutre/laravel-log-viewer/src/controllers"
+docker exec automail-app bash -c "mkdir -p /www/html/public/modules/"
 
 echo "Running migrations..."
 docker exec automail-app bash -c "cd /www/html && sudo -u nginx php artisan migrate --force"
 
+echo "Creating storage link..."
+docker exec automail-app bash -c "cd /www/html && sudo -u nginx php artisan storage:link" 2>/dev/null
+
 echo "Clearing caches..."
-docker exec automail-app bash -c "cd /www/html && sudo -u nginx php artisan config:clear && sudo -u nginx php artisan cache:clear"
+docker exec automail-app bash -c "cd /www/html && sudo -u nginx php artisan config:clear"
+docker exec automail-app bash -c "cd /www/html && sudo -u nginx php artisan cache:clear" 
+docker exec automail-app bash -c "cd /www/html && sudo -u nginx php artisan freescout:clear-cache"
 
 echo "Running post-update tasks..."
 docker exec automail-app bash -c "cd /www/html && sudo -u nginx php artisan freescout:after-app-update"
 
-echo "Done! Latest changes pulled and applied."
+echo "Installing modules..."
+docker exec automail-app bash -c "cd /www/html && sudo -u nginx php artisan freescout:module-install" 2>/dev/null
+
+echo "Setting final permissions (following setup-permissions.sh pattern)..."
+# Set ownership for storage directory
+docker exec automail-app bash -c "chown -R nginx:www-data /www/html/storage/"
+docker exec automail-app bash -c "chmod -R ug+rwx /www/html/storage/"
+
+# Set ownership for Modules directory
+docker exec automail-app bash -c "chown -R nginx:www-data /www/html/Modules/"
+
+# Set ownership for public modules directory
+docker exec automail-app bash -c "chown -R nginx:www-data /www/html/public/modules/"
+
+# Set ownership for bootstrap cache
+docker exec automail-app bash -c "chown -R nginx:www-data /www/html/bootstrap/cache"
+docker exec automail-app bash -c "chmod -R ug+rwx /www/html/bootstrap/cache"
+
+# Set ownership for public builds
+docker exec automail-app bash -c "chown -R nginx:www-data /www/html/public/css/builds /www/html/public/js/builds" 2>/dev/null
+docker exec automail-app bash -c "chmod -R ug+rwx /www/html/public/css/builds /www/html/public/js/builds" 2>/dev/null
+
+# Set ownership for entire webroot (as in setup-permissions.sh)
+docker exec automail-app bash -c "chown -R nginx:www-data /www/html"
+
+# Set specific ownership for cache data if using /data volume
+docker exec automail-app bash -c "[ -d /data/storage/framework/cache/data ] && chown -R 80:82 /data/storage/framework/cache/data" 2>/dev/null
+
+echo "Done! Latest changes pulled and applied with correct permissions."

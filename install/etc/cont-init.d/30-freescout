@@ -26,9 +26,21 @@ if [ ! -f "${NGINX_WEBROOT}/server.php" ]; then
             mv /data/storage/app/public/attachment/* /data/storage/app/attachment
             rm -rf /data/storage/app/public/attachment
         fi
-        ln -sf /data/config "${NGINX_WEBROOT}"/.env
-        touch /data/config
+        # If /data/config doesn't exist but .env does, copy .env to /data/config
+        if [ ! -f /data/config ] && [ -f "${NGINX_WEBROOT}"/.env ]; then
+            cp "${NGINX_WEBROOT}"/.env /data/config
+        fi
+        # If /data/config exists but .env doesn't, symlink it
+        if [ -f /data/config ] && [ ! -f "${NGINX_WEBROOT}"/.env ]; then
+            ln -sf /data/config "${NGINX_WEBROOT}"/.env
+        fi
+        # If neither exists, create empty config
+        if [ ! -f /data/config ] && [ ! -f "${NGINX_WEBROOT}"/.env ]; then
+            touch /data/config
+            ln -sf /data/config "${NGINX_WEBROOT}"/.env
+        fi
         chown "${NGINX_USER}":"${NGINX_GROUP}" "${NGINX_WEBROOT}"/.env
+        chown "${NGINX_USER}":"${NGINX_GROUP}" /data/config
         ln -sf /data/.automail-version "${NGINX_WEBROOT}"/.automail-version
         chown -R "${NGINX_USER}":"${NGINX_GROUP}" /data
     fi
@@ -90,7 +102,7 @@ if grep -q "APP_URL" "${NGINX_WEBROOT}"/.env > /dev/null 2>&1; then
         sanity_var SITE_URL "Site URL"
         db_ready "${DB_TYPE}"
 
-        print_info "Auto Configuring based on Environment Variables"
+        print_info "Auto Configuring based on Environment Variables (preserving custom settings)"
         # Proxy and Host Settings
         if [ -z "${SITE_URL}" ]; then
             if [ -n "${APP_URL}" ]; then
@@ -169,61 +181,93 @@ else
     sanity_var SITE_URL "Site URL"
     db_ready "${DB_TYPE}"
 
-    print_info "Generating Configuration"
-    touch "${NGINX_WEBROOT}"/.env
-    chown "${NGINX_USER}":"${NGINX_GROUP}" "${NGINX_WEBROOT}"/.env
-    echo "#### Automatically Generated File - Upon container restart any settings will reset!" | silent sudo -u "${NGINX_USER}" tee "${NGINX_WEBROOT}"/.env
-    # Proxy and HostSettings
-    if [ -z "${SITE_URL}" ]; then
-        if [ -n "${APP_URL}" ]; then
-            echo "APP_URL=$APP_URL" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+    ### Check if .env already exists from a previous run
+    if [ -f "${NGINX_WEBROOT}"/.env ]; then
+        print_info "Existing .env file found - Updating only essential values"
+        chown "${NGINX_USER}":"${NGINX_GROUP}" "${NGINX_WEBROOT}"/.env
+        
+        # Update only critical values if they're missing or need updating
+        if ! grep -q "^APP_KEY=" "${NGINX_WEBROOT}"/.env || grep -q "^APP_KEY=$" "${NGINX_WEBROOT}"/.env; then
+            print_info "Generating missing APP_KEY"
+            cd "${NGINX_WEBROOT}"/
+            silent sudo -u "${NGINX_USER}" php artisan key:generate
+        fi
+        
+        # Update database credentials only if changed
+        if [ -n "${DB_HOST}" ] && ! grep -q "^DB_HOST=${DB_HOST}$" "${NGINX_WEBROOT}"/.env; then
+            sed -i --follow-symlinks "s#^DB_HOST=.*#DB_HOST=${DB_HOST}#g" "${NGINX_WEBROOT}"/.env
+        fi
+        if [ -n "${DB_NAME}" ] && ! grep -q "^DB_DATABASE=${DB_NAME}$" "${NGINX_WEBROOT}"/.env; then
+            sed -i --follow-symlinks "s#^DB_DATABASE=.*#DB_DATABASE=${DB_NAME}#g" "${NGINX_WEBROOT}"/.env
+        fi
+        if [ -n "${DB_USER}" ] && ! grep -q "^DB_USERNAME=${DB_USER}$" "${NGINX_WEBROOT}"/.env; then
+            sed -i --follow-symlinks "s#^DB_USERNAME=.*#DB_USERNAME=${DB_USER}#g" "${NGINX_WEBROOT}"/.env
+        fi
+        if [ -n "${DB_PASS}" ] && ! grep -q "^DB_PASSWORD=${DB_PASS}$" "${NGINX_WEBROOT}"/.env; then
+            sed -i --follow-symlinks "s#^DB_PASSWORD=.*#DB_PASSWORD=${DB_PASS}#g" "${NGINX_WEBROOT}"/.env
+        fi
+        
+        # Add missing essential entries
+        if ! grep -q "^APP_DISABLE_UPDATING=" "${NGINX_WEBROOT}"/.env; then
+            echo "APP_DISABLE_UPDATING=true" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
         fi
     else
-        echo "APP_URL=$SITE_URL" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+        print_info "No existing .env found - Generating new configuration"
+        touch "${NGINX_WEBROOT}"/.env
+        chown "${NGINX_USER}":"${NGINX_GROUP}" "${NGINX_WEBROOT}"/.env
+        echo "# Automail Configuration - Generated on $(date)" | silent sudo -u "${NGINX_USER}" tee "${NGINX_WEBROOT}"/.env
+        # Proxy and HostSettings
+        if [ -z "${SITE_URL}" ]; then
+            if [ -n "${APP_URL}" ]; then
+                echo "APP_URL=$APP_URL" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+            fi
+        else
+            echo "APP_URL=$SITE_URL" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+        fi
+
+        case $(echo ${SITE_URL,,} | cut -d : -f1) in
+            http )
+                echo "SESSION_SECURE_COOKIE=false" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+                ;;
+            https )
+                echo "SESSION_SECURE_COOKIE=true" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+                ;;
+        esac
+
+        if [ -n "${APP_PROXY}" ] ; then
+            echo "APP_PROXY=${APP_PROXY}" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+        fi
+
+        if [ -n "${APP_TRUSTED_PROXIES}" ] ; then
+            echo "APP_TRUSTED_PROXIES=${APP_TRUSTED_PROXIES}" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+        fi
+
+        if var_true "${APP_DEBUG}" || var_true "${DISPLAY_ERRORS}" ; then
+            echo "APP_DEBUG=true" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+        else
+            echo "APP_DEBUG=false" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+        fi
+
+        echo "APP_KEY=" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+
+        # Set DB Settings
+        echo "DB_CONNECTION=$DB_TYPE" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+        echo "DB_HOST=$DB_HOST" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+        echo "DB_PORT=$DB_PORT" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+        echo "DB_DATABASE=$DB_NAME" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+        echo "DB_USERNAME=$DB_USER" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+        echo "DB_PASSWORD=$DB_PASS" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+        echo "APP_DISABLE_UPDATING=true" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
+
+        # Generate Key
+        cd "${NGINX_WEBROOT}"/
+        chown -R "${NGINX_USER}":"${NGINX_GROUP}" "${NGINX_WEBROOT}"/config
+        if [ -f /data/config ]; then
+            chown "${NGINX_USER}":"${NGINX_GROUP}" /data/config
+            chmod 0755 /data/config
+        fi
+        silent sudo -u "${NGINX_USER}" php artisan key:generate
     fi
-
-    case $(echo ${SITE_URL,,} | cut -d : -f1) in
-        http )
-            echo "SESSION_SECURE_COOKIE=false" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
-            ;;
-        https )
-            echo "SESSION_SECURE_COOKIE=true" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
-            ;;
-    esac
-
-    if [ -n "${APP_PROXY}" ] ; then
-        echo "APP_PROXY=${APP_PROXY}" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
-    fi
-
-    if [ -n "${APP_TRUSTED_PROXIES}" ] ; then
-        echo "APP_TRUSTED_PROXIES=${APP_TRUSTED_PROXIES}" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
-    fi
-
-    if var_true "${APP_DEBUG}" || var_true "${DISPLAY_ERRORS}" ; then
-        echo "APP_DEBUG=true" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
-    else
-        echo "APP_DEBUG=false" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
-    fi
-
-    echo "APP_KEY=" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
-
-    # Set DB Settings
-    echo "DB_CONNECTION=$DB_TYPE" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
-    echo "DB_HOST=$DB_HOST" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
-    echo "DB_PORT=$DB_PORT" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
-    echo "DB_DATABASE=$DB_NAME" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
-    echo "DB_USERNAME=$DB_USER" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
-    echo "DB_PASSWORD=$DB_PASS" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
-    echo "APP_DISABLE_UPDATING=true" | silent sudo -u "${NGINX_USER}" tee -a "${NGINX_WEBROOT}"/.env
-
-    # Generate Key
-    cd "${NGINX_WEBROOT}"/
-    chown -R "${NGINX_USER}":"${NGINX_GROUP}" "${NGINX_WEBROOT}"/config
-    if [ -f /data/config ]; then
-        chown "${NGINX_USER}":"${NGINX_GROUP}" /data/config
-        chmod 0755 /data/config
-    fi
-    silent sudo -u "${NGINX_USER}" php artisan key:generate
 fi
 
 ## Removals

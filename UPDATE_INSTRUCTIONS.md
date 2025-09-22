@@ -21,16 +21,16 @@ This method rebuilds the container with the latest code from the repository.
 
 ```bash
 # 1. Stop the running containers
-docker-compose down
+docker compose down
 
 # 2. Rebuild the application container with fresh code
-docker-compose build --no-cache automail-app
+docker compose build --no-cache automail-app
 
 # 3. Start the updated containers
-docker-compose up -d
+docker compose up -d
 
 # 4. Check logs to ensure successful startup
-docker-compose logs -f automail-app
+docker compose logs -f automail-app
 ```
 
 **Expected Duration:** 5-10 minutes
@@ -42,15 +42,15 @@ Update to a specific Automail version:
 
 ```bash
 # 1. Stop containers
-docker-compose down
+docker compose down
 
 # 2. Build with specific version
-docker-compose build \
+docker compose build \
   --build-arg AUTOMAIL_VERSION=1.8.191 \
   --no-cache automail-app
 
 # 3. Start containers
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Method 3: Complete Fresh Installation

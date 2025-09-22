@@ -65,7 +65,7 @@ echo "Waiting for database to be ready..."
 sleep 10
 
 # Wait for database to be fully ready
-until docker exec automail-db mysql -u root -proot -e "SELECT 1" &>/dev/null; do
+until docker exec automail-db mysql -u root -ppassword -e "SELECT 1" &>/dev/null; do
     echo "Waiting for database..."
     sleep 2
 done
@@ -76,15 +76,38 @@ echo
 echo "Step 6: Importing database dump..."
 echo "This may take a few minutes for large databases..."
 
-# Copy dump file to container
-docker cp "$BACKUP_SQL" automail-db:/tmp/backup.sql
+# Get file size for progress reporting
+FILE_SIZE=$(du -h "$BACKUP_SQL" | cut -f1)
+echo "Database dump size: $FILE_SIZE"
 
-# Import the dump
-docker exec automail-db sh -c "mysql -u root -proot -e 'DROP DATABASE IF EXISTS automail; CREATE DATABASE automail CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'"
-docker exec automail-db sh -c "mysql -u root -proot automail < /tmp/backup.sql"
+# First, configure MySQL for large imports
+echo "Configuring MySQL for large import..."
+docker exec automail-db mysql -u root -ppassword -e "SET GLOBAL max_allowed_packet=1073741824;"
+docker exec automail-db mysql -u root -ppassword -e "SET GLOBAL wait_timeout=28800;"
+docker exec automail-db mysql -u root -ppassword -e "SET GLOBAL interactive_timeout=28800;"
+docker exec automail-db mysql -u root -ppassword -e "SET GLOBAL net_read_timeout=600;"
+docker exec automail-db mysql -u root -ppassword -e "SET GLOBAL net_write_timeout=600;"
 
-# Clean up
-docker exec automail-db rm /tmp/backup.sql
+# Create database
+echo "Creating database..."
+docker exec automail-db sh -c "mysql -u root -ppassword -e 'DROP DATABASE IF EXISTS automail; CREATE DATABASE automail CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'"
+
+# Import using a more robust method
+echo "Starting import (this will take time for large databases)..."
+echo "Import method: Direct piped import to avoid copying large file to container"
+
+# Use pv for progress if available, otherwise use cat
+if command -v pv &> /dev/null; then
+    echo "Using pv for progress monitoring..."
+    pv "$BACKUP_SQL" | docker exec -i automail-db mysql -u root -ppassword \
+        --max_allowed_packet=1G \
+        automail
+else
+    echo "Importing without progress bar (install pv for progress monitoring)..."
+    cat "$BACKUP_SQL" | docker exec -i automail-db mysql -u root -ppassword \
+        --max_allowed_packet=1G \
+        automail
+fi
 
 echo "✓ Database imported successfully"
 echo
@@ -97,26 +120,6 @@ sleep 10
 echo "✓ Application container started"
 echo
 
-# Step 8: Copy application files
-echo "Step 8: Copying application files to container..."
-
-# Copy the application files to the container's web root
-docker cp "$BACKUP_HTML_DIR/." automail-app:/www/html/
-
-# Set proper permissions
-docker exec automail-app chown -R nginx:www-data /www/html
-docker exec automail-app chmod -R 755 /www/html
-docker exec automail-app find /www/html -type f -exec chmod 644 {} \;
-
-# Ensure storage directories are writable
-docker exec automail-app chmod -R 775 /www/html/storage || true
-docker exec automail-app chmod -R 775 /www/html/bootstrap/cache || true
-
-echo "✓ Application files copied and permissions set"
-echo
-
-# Step 9: Update configuration
-echo "Step 9: Updating configuration..."
 
 # Check if .env file exists in the backup
 if [ -f "$BACKUP_HTML_DIR/.env" ]; then

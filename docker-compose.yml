@@ -8,7 +8,7 @@ services:
         - SITE_URL=${SITE_URL}    
     container_name: automail-app
     ports:
-      - "80:80"
+      - "8080:80"
     # links:                      # ← optional: safe to remove
     #   - automail-db
     depends_on:                   # ← preferred over links

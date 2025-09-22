@@ -48,8 +48,23 @@ if [ $? -ne 0 ]; then
     echo "Resetting to origin/master..."
     docker exec automail-app bash -c "cd /www/html && git reset --hard origin/master"
 else
+    echo "Checking for uncommitted changes..."
+    docker exec automail-app bash -c "cd /www/html && git status --short"
+    
+    echo "Stashing any local changes..."
+    docker exec automail-app bash -c "cd /www/html && git stash save 'Auto-stash before pull'" 2>/dev/null
+    
     echo "Pulling latest changes..."
-    docker exec automail-app bash -c "cd /www/html && git pull origin master"
+    docker exec automail-app bash -c "cd /www/html && git pull origin master" 2>/dev/null
+    
+    if [ $? -ne 0 ]; then
+        echo "Pull failed due to conflicts. Forcing update..."
+        docker exec automail-app bash -c "cd /www/html && git fetch origin master"
+        docker exec automail-app bash -c "cd /www/html && git reset --hard origin/master"
+    fi
+    
+    # Try to reapply stashed changes
+    docker exec automail-app bash -c "cd /www/html && git stash pop" 2>/dev/null || echo "Note: No stashed changes to reapply or conflicts occurred"
 fi
 
 echo "Running composer update..."

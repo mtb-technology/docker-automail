@@ -11,32 +11,43 @@ if ! docker ps | grep -q automail-app; then
     exit 1
 fi
 
-# Check if git repo exists in container
-docker exec automail-app bash -c "[ -d /www/html/.git ]" 2>/dev/null
+# Read credentials
+if [ -f .env ]; then
+    source .env
+fi
+
+if [ -z "$GITHUB_USERNAME" ] || [ -z "$GITHUB_TOKEN" ]; then
+    echo "Please set GITHUB_USERNAME and GITHUB_TOKEN in .env file"
+    exit 1
+fi
+
+# Add safe directory first
+echo "Setting git safe directory..."
+docker exec automail-app bash -c "git config --global --add safe.directory /www/html"
+
+# Check if git repo exists AND has correct remote
+docker exec automail-app bash -c "cd /www/html && git remote get-url origin" 2>/dev/null
 if [ $? -ne 0 ]; then
-    echo "No git repository found in /www/html"
-    echo "Initializing git repository..."
+    echo "Git repository not properly configured. Setting up..."
     
-    # Read credentials
-    if [ -f .env ]; then
-        source .env
+    # Check if .git exists but no remote
+    docker exec automail-app bash -c "[ -d /www/html/.git ]" 2>/dev/null
+    if [ $? -eq 0 ]; then
+        echo "Found existing .git directory, adding remote..."
+        docker exec automail-app bash -c "cd /www/html && git remote add origin https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/Webhoek/autommail.git" 2>/dev/null || \
+        docker exec automail-app bash -c "cd /www/html && git remote set-url origin https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/Webhoek/autommail.git"
+    else
+        echo "Initializing new git repository..."
+        docker exec automail-app bash -c "cd /www/html && git init"
+        docker exec automail-app bash -c "cd /www/html && git remote add origin https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/Webhoek/autommail.git"
     fi
     
-    if [ -z "$GITHUB_USERNAME" ] || [ -z "$GITHUB_TOKEN" ]; then
-        echo "Please set GITHUB_USERNAME and GITHUB_TOKEN in .env file"
-        exit 1
-    fi
-    
-    # Initialize git repo
-    docker exec automail-app bash -c "cd /www/html && git init"
-    docker exec automail-app bash -c "cd /www/html && git config --global --add safe.directory /www/html"
-    docker exec automail-app bash -c "cd /www/html && git remote add origin https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/Webhoek/autommail.git"
+    echo "Fetching from remote..."
     docker exec automail-app bash -c "cd /www/html && git fetch --depth=1"
+    
+    echo "Resetting to origin/master..."
     docker exec automail-app bash -c "cd /www/html && git reset --hard origin/master"
 else
-    echo "Adding safe directory exception..."
-    docker exec automail-app bash -c "git config --global --add safe.directory /www/html"
-    
     echo "Pulling latest changes..."
     docker exec automail-app bash -c "cd /www/html && git pull origin master"
 fi

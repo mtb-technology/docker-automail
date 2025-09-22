@@ -29,10 +29,14 @@ if [ $? -ne 0 ]; then
     
     # Initialize git repo
     docker exec automail-app bash -c "cd /www/html && git init"
+    docker exec automail-app bash -c "cd /www/html && git config --global --add safe.directory /www/html"
     docker exec automail-app bash -c "cd /www/html && git remote add origin https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/Webhoek/autommail.git"
     docker exec automail-app bash -c "cd /www/html && git fetch --depth=1"
     docker exec automail-app bash -c "cd /www/html && git reset --hard origin/master"
 else
+    echo "Adding safe directory exception..."
+    docker exec automail-app bash -c "git config --global --add safe.directory /www/html"
+    
     echo "Pulling latest changes..."
     docker exec automail-app bash -c "cd /www/html && git pull origin master"
 fi

@@ -42,6 +42,10 @@ REPO_URL="https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/Webhoek/autommai
 echo -e "${YELLOW}Creating backup of current installation...${NC}"
 docker exec automail-app bash -c "cp -r /www/html /www/html.backup.$(date +%Y%m%d_%H%M%S)"
 
+echo -e "${YELLOW}Setting git safe directory...${NC}"
+docker exec automail-app bash -c "git config --global --add safe.directory /www/html"
+docker exec automail-app bash -c "git config --global --add safe.directory /tmp/automail-update"
+
 echo -e "${YELLOW}Cloning latest repository to temporary location...${NC}"
 docker exec automail-app bash -c "rm -rf /tmp/automail-update && git clone --depth=1 --branch=master ${REPO_URL} /tmp/automail-update"
 
